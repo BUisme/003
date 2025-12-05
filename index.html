@@ -2,12 +2,10 @@
 <html lang="th">
 <head>
   <meta charset="UTF-8" />
-  <title>DAY – Message & Tree</title>
+  <title>DAY – Message & Symbols</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <style>
-    :root {
-      color-scheme: dark;
-    }
+    :root { color-scheme: dark; }
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -29,15 +27,8 @@
       box-shadow: 0 20px 40px rgba(0,0,0,0.55);
       border: 1px solid rgba(148,163,184,0.35);
     }
-    h1 {
-      margin: 0 0 8px;
-      font-size: 1.6rem;
-    }
-    p.caption {
-      margin: 0 0 14px;
-      font-size: 0.9rem;
-      color: #9ca3af;
-    }
+    h1 { margin: 0 0 8px; font-size: 1.6rem; }
+    p.caption { margin: 0 0 14px; font-size: 0.9rem; color: #9ca3af; }
     label {
       display: block;
       margin-top: 12px;
@@ -92,10 +83,7 @@
       border: 1px solid #1f2937;
       margin-bottom: 12px;
     }
-    .link-box a {
-      color: #38bdf8;
-      text-decoration: none;
-    }
+    .link-box a { color: #38bdf8; text-decoration: none; }
     .qr-wrapper {
       display: flex;
       align-items: center;
@@ -109,31 +97,43 @@
     }
     .note { font-size: 0.8rem; color: #9ca3af; }
 
+    .gen-footer {
+      margin-top: 18px;
+      display: flex;
+      justify-content: flex-end;
+      font-size: 0.85rem;
+    }
+    .gen-footer a {
+      color: #38bdf8;
+      text-decoration: none;
+      padding: 5px 11px;
+      border-radius: 999px;
+      border: 1px solid #38bdf8;
+    }
+
     /* viewer mode */
     .viewer-layout {
       display: flex;
       gap: 18px;
       flex-wrap: wrap;
     }
-    .tree-box {
+    .symbol-box {
       flex: 0 0 200px;
       background: #020617;
       border-radius: 14px;
-      padding: 10px 8px;
+      padding: 10px 8px 12px;
       border: 1px solid #1f2937;
       font-family: "JetBrains Mono", "Fira Code", monospace;
       font-size: 0.78rem;
       line-height: 1.1;
       text-align: center;
     }
-    .tree-title {
+    .symbol-title {
       font-size: 0.8rem;
       color: #9ca3af;
-      margin-bottom: 4px;
+      margin-bottom: 6px;
     }
-    #tree {
-      white-space: pre;
-    }
+    #symbolArea { white-space: pre-wrap; }
     .message-box {
       flex: 1 1 260px;
       background: #020617;
@@ -141,21 +141,14 @@
       padding: 12px 12px 14px;
       border: 1px solid #1f2937;
     }
-    .to {
-      font-size: 0.95rem;
-      margin-bottom: 4px;
-    }
+    .to { font-size: 0.95rem; margin-bottom: 4px; }
     .msg {
       font-size: 1.08rem;
       line-height: 1.6;
       min-height: 80px;
       white-space: pre-wrap;
     }
-    .meta {
-      margin-top: 8px;
-      font-size: 0.78rem;
-      color: #9ca3af;
-    }
+    .meta { margin-top: 8px; font-size: 0.78rem; color: #9ca3af; }
     .footer {
       margin-top: 14px;
       display: flex;
@@ -178,14 +171,14 @@
   </style>
 </head>
 <body>
+  <!-- โหมดสร้างลิงก์ -->
   <div class="card" id="generatorCard">
     <h1>สร้างลิงก์ข้อความ + QR (เวอร์ชัน DAY)</h1>
     <p class="caption">
-      ใส่ข้อความ, ความเร็ว, สี และ “ส่งถึงใคร” เดี๋ยวระบบสรุปให้
-      พร้อมสร้างลิงก์สั้น (แบบ query สั้น ๆ) และ QR ใช้งานบน GitHub Pages ได้เลย
+      ใส่ข้อความ, ความเร็ว, สี, คนรับ และเลือกป้ายใน “ช่องแสดงสัญลักษณ์”
+      ระบบจะสรุปให้พร้อมสร้างลิงก์สั้นและ QR สำหรับแชร์ต่อ
     </p>
 
-    <!-- INPUTS -->
     <label for="msg">1. ข้อความที่จะให้พิมพ์</label>
     <textarea id="msg" placeholder="เช่น ขอบคุณที่อยู่ข้าง ๆ กันนะ :)"></textarea>
 
@@ -203,9 +196,16 @@
     <label for="to">4. ส่งถึงใคร</label>
     <input id="to" type="text" placeholder="เช่น ส่งถึง: เดย์" />
 
+    <label for="symbolKind">5. ช่องแสดงสัญลักษณ์</label>
+    <select id="symbolKind">
+      <option value="xmas">1. ต้นคริสต์มาส</option>
+      <option value="newyear">1.2 สวัสดีปีใหม่ (TH/EN)</option>
+      <option value="songkran">1.3 สุขสันต์สงกรานต์</option>
+      <option value="birthday">1.4 สุขสันต์วันเกิด</option>
+    </select>
+
     <button class="primary" id="generateBtn">สรุป & สร้างลิงก์ + QR</button>
 
-    <!-- OUTPUT -->
     <div class="result" id="result">
       <div class="summary" id="summary"></div>
 
@@ -217,25 +217,29 @@
       <div class="qr-wrapper">
         <div id="qrcode"></div>
         <div class="note">
-          สแกน QR นี้ จะเปิดไปยังหน้าแสดงข้อความ (พร้อมต้นคริสต์มาสกระพริบ)
-          บนเว็บไซต์ของเดย์
+          สแกน QR จะไปหน้าแสดงข้อความ (พร้อม “ช่องแสดงสัญลักษณ์”
+          ตามที่เลือก) บนเว็บไซต์ของเดย์
         </div>
       </div>
     </div>
+
+    <div class="gen-footer">
+      <a id="genHomeLink" href="#" target="_blank">กลับไปเว็บไซต์หลักของเดย์</a>
+    </div>
   </div>
 
-  <!-- VIEWER MODE -->
+  <!-- โหมดแสดงข้อความ -->
   <div class="card" id="viewerCard">
     <h1>ข้อความพิเศษจากเดย์</h1>
     <p class="caption">
       ข้อความนี้ถูกสร้างผ่านหน้าเครื่องมือข้อความของเดย์
-      แสดงแบบพิมพ์ทีละตัว พร้อมต้นคริสต์มาสประดับไฟ
+      แสดงแบบพิมพ์ทีละตัว พร้อม “ช่องแสดงสัญลักษณ์” ด้านซ้าย
     </p>
 
     <div class="viewer-layout">
-      <div class="tree-box">
-        <div class="tree-title">DAY XMAS TREE</div>
-        <div id="tree"></div>
+      <div class="symbol-box">
+        <div class="symbol-title" id="symbolTitle">ช่องแสดงสัญลักษณ์</div>
+        <div id="symbolArea"></div>
       </div>
       <div class="message-box">
         <div class="to" id="toLine"></div>
@@ -249,40 +253,38 @@
     </div>
   </div>
 
-  <!-- QRCode.js CDN (ใช้ตอนโหมดสร้างลิงก์) -->
+  <!-- QRCode.js สำหรับโหมดสร้างลิงก์ -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <script>
     // ======= CONFIG =======
-    // ลิงก์เว็บไซต์หลักของเดย์ (เดย์ให้มาแล้ว):
     const HOME_URL = "https://buisme.github.io/day-project-hub/";
-
-    // ลิงก์ของไฟล์นี้เอง ใช้สำหรับสร้างลิงก์สั้นอัตโนมัติ
     const MESSAGE_PAGE_URL = window.location.origin + window.location.pathname;
 
-    // ======= MODE DETECT =======
+    // ======= ตรวจโหมด =======
     const params = new URLSearchParams(window.location.search);
     const hasMessage = params.has("m");
 
     const generatorCard = document.getElementById("generatorCard");
     const viewerCard    = document.getElementById("viewerCard");
 
+    document.getElementById("genHomeLink").href = HOME_URL;
+
     if (hasMessage) {
-      // โหมดแสดงข้อความ
       viewerCard.style.display = "block";
       setupViewerMode();
     } else {
-      // โหมดสร้างลิงก์
       generatorCard.style.display = "block";
       setupGeneratorMode();
     }
 
-    // ======= GENERATOR MODE =======
+    // ======= โหมดสร้างลิงก์ =======
     function setupGeneratorMode() {
       const msgEl   = document.getElementById("msg");
       const speedEl = document.getElementById("speed");
       const colorEl = document.getElementById("color");
       const toEl    = document.getElementById("to");
+      const kindEl  = document.getElementById("symbolKind");
 
       const resultBox = document.getElementById("result");
       const summaryEl = document.getElementById("summary");
@@ -294,6 +296,7 @@
         const speed = parseInt(speedEl.value, 10) || 60;
         const color = colorEl.value || "#00ff7f";
         const to    = toEl.value.trim() || "ใครบางคน";
+        const kind  = kindEl.value || "xmas";
 
         if (!msg) {
           alert("กรุณาพิมพ์ข้อความก่อนนะ");
@@ -301,28 +304,34 @@
           return;
         }
 
-        // ใช้ key สั้น ๆ เพื่อให้ query สั้นที่สุด
         const p = new URLSearchParams({
           m: msg,
           s: String(speed),
-          c: color.replace("#",""), // ตัด # ออก
-          t: to
+          c: color.replace("#",""),
+          t: to,
+          k: kind
         });
 
         const shortUrl = MESSAGE_PAGE_URL + "?" + p.toString();
 
-        // สรุปค่าอินพุต
+        const kindTextMap = {
+          xmas: "ต้นคริสต์มาส",
+          newyear: "สวัสดีปีใหม่ (TH/EN)",
+          songkran: "สุขสันต์สงกรานต์",
+          birthday: "สุขสันต์วันเกิด"
+        };
+
         summaryEl.textContent =
           "สรุปค่าที่รับมา:\n" +
-          `• ข้อความ: ${msg}\n` +
+          `• ข้อความ: ${msg}\n" +
           `• ความเร็วพิมพ์: ${speed} ms/ตัวอักษร\n` +
           `• สีตัวอักษร: ${color}\n` +
-          `• ส่งถึง: ${to}`;
+          `• ส่งถึง: ${to}\n` +
+          `• ช่องแสดงสัญลักษณ์: ${kindTextMap[kind] || kind}`;
 
         linkEl.textContent = shortUrl;
         linkEl.href = shortUrl;
 
-        // สร้าง QR
         qrBox.innerHTML = "";
         new QRCode(qrBox, {
           text: shortUrl,
@@ -334,20 +343,30 @@
       });
     }
 
-    // ======= VIEWER MODE (message + tree) =======
+    // ======= โหมดแสดงข้อความ =======
     function setupViewerMode() {
       const m = params.get("m") || "ยังไม่ได้ส่งข้อความมานะ :)";
       const s = parseInt(params.get("s") || "60", 10);
       const cHex = params.get("c") || "00ff7f";
       const t = params.get("t") || "ใครบางคน";
+      const k = params.get("k") || "xmas";
 
       const msgBox = document.getElementById("msgBox");
       const toLine = document.getElementById("toLine");
       const meta   = document.getElementById("meta");
       const status = document.getElementById("status");
       const homeLink = document.getElementById("homeLink");
+      const symbolTitle = document.getElementById("symbolTitle");
 
       const color = "#" + cHex;
+
+      const titleMap = {
+        xmas: "ช่องแสดงสัญลักษณ์ • ต้นคริสต์มาส",
+        newyear: "ช่องแสดงสัญลักษณ์ • สวัสดีปีใหม่",
+        songkran: "ช่องแสดงสัญลักษณ์ • สุขสันต์สงกรานต์",
+        birthday: "ช่องแสดงสัญลักษณ์ • สุขสันต์วันเกิด"
+      };
+      symbolTitle.textContent = titleMap[k] || "ช่องแสดงสัญลักษณ์";
 
       toLine.textContent = "ส่งถึง: " + t;
       toLine.style.color = color;
@@ -360,7 +379,7 @@
       homeLink.href = HOME_URL;
 
       typeWriter(m, isNaN(s) ? 60 : s, msgBox, status);
-      startTreeAnimation(color);
+      startSymbolDisplay(k, color);
     }
 
     async function typeWriter(text, speed, msgBox, statusEl) {
@@ -372,7 +391,7 @@
       statusEl.textContent = "พิมพ์ข้อความเสร็จแล้ว";
     }
 
-    // ======= ASCII TREE ANIMATION =======
+    // ======= SYMBOLS =======
     const treeLines = [
       "        *",
       "       ***",
@@ -386,40 +405,88 @@
     ];
 
     const treeColors = [
-      "#f97316", // orange
-      "#fb7185", // pink
-      "#22c55e", // green
-      "#38bdf8", // sky
-      "#eab308"  // yellow
+      "#f97316",
+      "#fb7185",
+      "#22c55e",
+      "#38bdf8",
+      "#eab308"
     ];
 
-    function startTreeAnimation(mainColor) {
-      const treeEl = document.getElementById("tree");
-      const baseColor = mainColor || "#22c55e";
+    function startSymbolDisplay(kind, mainColor) {
+      const area = document.getElementById("symbolArea");
+      if (!area) return;
 
-      function render() {
-        let html = "";
-        for (let i = 0; i < treeLines.length; i++) {
-          const line = treeLines[i];
-          for (let ch of line) {
-            if (ch === "*") {
-              const color = treeColors[Math.floor(Math.random() * treeColors.length)];
-              html += `<span style="color:${color}">*</span>`;
-            } else if (ch === "|") {
-              html += `<span style="color:#9ca3af">|</span>`;
-            } else if (ch === " ") {
-              html += " ";
-            } else {
-              html += `<span style="color:${baseColor}">${ch}</span>`;
+      const color = mainColor || "#22c55e";
+
+      if (kind === "xmas") {
+        // ต้นคริสต์มาสกระพริบ
+        function renderTree() {
+          let html = "";
+          for (let i = 0; i < treeLines.length; i++) {
+            const line = treeLines[i];
+            for (let ch of line) {
+              if (ch === "*") {
+                const c = treeColors[Math.floor(Math.random() * treeColors.length)];
+                html += `<span style="color:${c}">*</span>`;
+              } else if (ch === "|") {
+                html += `<span style="color:#9ca3af">|</span>`;
+              } else if (ch === " ") {
+                html += "&nbsp;";
+              } else {
+                html += `<span style="color:${color}">${ch}</span>`;
+              }
             }
+            html += "<br>";
           }
-          html += "\n";
+          area.innerHTML = html;
         }
-        treeEl.innerHTML = html;
+        renderTree();
+        setInterval(renderTree, 180);
+      } else if (kind === "newyear") {
+        // สวัสดีปีใหม่ TH/EN แบบกระพริบสีเบา ๆ
+        let tick = 0;
+        function renderNY() {
+          const c1 = tick % 2 === 0 ? color : "#38bdf8";
+          const c2 = tick % 2 === 0 ? "#eab308" : "#f97316";
+          area.innerHTML =
+            `<div style="font-size:0.85rem;color:${c1};">สวัสดีปีใหม่</div>` +
+            `<div style="font-size:0.75rem;color:${c2};margin-top:4px;">HAPPY NEW YEAR</div>`;
+          tick++;
+        }
+        renderNY();
+        setInterval(renderNY, 500);
+      } else if (kind === "songkran") {
+        // สุขสันต์สงกรานต์ + water effect
+        let tick = 0;
+        function renderSongkran() {
+          const c1 = tick % 2 === 0 ? color : "#38bdf8";
+          area.innerHTML =
+            `<div style="font-size:0.85rem;color:${c1};">สุขสันต์วันสงกรานต์</div>` +
+            `<div style="font-size:0.75rem;color:#60a5fa;margin-top:4px;">Happy Songkran</div>` +
+            `<div style="font-size:0.7rem;color:#93c5fd;margin-top:4px;">💧 💦 💧</div>`;
+          tick++;
+        }
+        renderSongkran();
+        setInterval(renderSongkran, 600);
+      } else if (kind === "birthday") {
+        // สุขสันต์วันเกิด + เค้กเล็ก ๆ
+        let tick = 0;
+        function renderBD() {
+          const c1 = tick % 2 === 0 ? color : "#fb7185";
+          area.innerHTML =
+            `<div style="font-size:0.85rem;color:${c1};">สุขสันต์วันเกิด</div>` +
+            `<div style="font-size:0.75rem;color:#fbbf24;margin-top:4px;">Happy Birthday</div>` +
+            `<div style="font-size:0.7rem;margin-top:4px;">` +
+            `🎂<span style="color:#f97316;">★</span>🎂` +
+            `</div>`;
+          tick++;
+        }
+        renderBD();
+        setInterval(renderBD, 600);
+      } else {
+        // default
+        area.textContent = "ช่องแสดงสัญลักษณ์";
       }
-
-      render();
-      setInterval(render, 180); // กระพริบไฟ
     }
   </script>
 </body>
