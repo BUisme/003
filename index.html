@@ -1,0 +1,563 @@
+
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <title>DAY – Message & Symbols</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <style>
+    :root { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: radial-gradient(circle at top, #1d2539 0%, #020617 55%, #000 100%);
+      color: #e5e7eb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      max-width: 760px;
+      width: 100%;
+      background: rgba(15,23,42,0.95);
+      border-radius: 18px;
+      padding: 22px 18px 26px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.55);
+      border: 1px solid rgba(148,163,184,0.35);
+    }
+    h1 { margin: 0 0 8px; font-size: 1.6rem; }
+    p.caption { margin: 0 0 14px; font-size: 0.9rem; color: #9ca3af; }
+    label {
+      display: block;
+      margin-top: 12px;
+      margin-bottom: 4px;
+      font-size: 0.9rem;
+    }
+    textarea, input, select {
+      width: 100%;
+      padding: 8px 10px;
+      border-radius: 9px;
+      border: 1px solid #374151;
+      background: #020617;
+      color: #e5e7eb;
+      font-size: 0.95rem;
+      outline: none;
+    }
+    textarea { min-height: 90px; resize: vertical; }
+    input[type="color"] { padding: 0; height: 40px; cursor: pointer; }
+    input[type="date"] { cursor: pointer; }
+    .row { display: flex; gap: 12px; flex-wrap: wrap; }
+    .row > div { flex: 1 1 150px; }
+    button.primary {
+      margin-top: 18px;
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 999px;
+      border: none;
+      background: #22c55e;
+      color: #02140a;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button.primary:hover { background: #4ade80; }
+    .result {
+      margin-top: 22px;
+      padding-top: 16px;
+      border-top: 1px dashed #374151;
+      display: none;
+    }
+    .summary {
+      font-size: 0.9rem;
+      color: #d1d5db;
+      white-space: pre-line;
+      margin-bottom: 10px;
+    }
+    .link-box {
+      background: #020617;
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 0.84rem;
+      word-wrap: break-word;
+      border: 1px solid #1f2937;
+      margin-bottom: 12px;
+    }
+    .link-box a { color: #38bdf8; text-decoration: none; }
+    .qr-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    #qrcode {
+      background: #f9fafb;
+      padding: 8px;
+      border-radius: 12px;
+    }
+    .note { font-size: 0.8rem; color: #9ca3af; }
+
+    .gen-footer {
+      margin-top: 18px;
+      display: flex;
+      justify-content: flex-end;
+      font-size: 0.85rem;
+    }
+    .gen-footer a {
+      color: #38bdf8;
+      text-decoration: none;
+      padding: 5px 11px;
+      border-radius: 999px;
+      border: 1px solid #38bdf8;
+      transition: background 0.2s;
+    }
+    .gen-footer a:hover { background: rgba(56,189,248,0.1); }
+
+    /* viewer mode */
+    .viewer-layout {
+      display: flex;
+      gap: 18px;
+      flex-wrap: wrap;
+    }
+    .symbol-box {
+      flex: 0 0 200px;
+      background: #020617;
+      border-radius: 14px;
+      padding: 10px 8px 12px;
+      border: 1px solid #1f2937;
+      font-family: "JetBrains Mono", "Fira Code", monospace;
+      font-size: 0.78rem;
+      line-height: 1.1;
+      text-align: center;
+    }
+    .symbol-title {
+      font-size: 0.8rem;
+      color: #9ca3af;
+      margin-bottom: 6px;
+    }
+    #symbolArea { white-space: pre-wrap; }
+    .message-box {
+      flex: 1 1 260px;
+      background: #020617;
+      border-radius: 14px;
+      padding: 12px 12px 14px;
+      border: 1px solid #1f2937;
+    }
+    .to { font-size: 0.95rem; margin-bottom: 4px; }
+    .msg {
+      font-size: 1.08rem;
+      line-height: 1.6;
+      min-height: 80px;
+      white-space: pre-wrap;
+    }
+    .meta {
+      margin-top: 8px;
+      font-size: 0.78rem;
+      color: #9ca3af;
+      white-space: pre-line;
+    }
+    .footer {
+      margin-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: center;
+      font-size: 0.84rem;
+    }
+    .footer a {
+      color: #38bdf8;
+      text-decoration: none;
+      padding: 5px 11px;
+      border-radius: 999px;
+      border: 1px solid #38bdf8;
+      transition: background 0.2s;
+    }
+    .footer a:hover { background: rgba(56,189,248,0.1); }
+
+    #generatorCard { display: none; }
+    #viewerCard { display: none; }
+  </style>
+</head>
+<body>
+  <!-- โหมดสร้างลิงก์ -->
+  <div class="card" id="generatorCard">
+    <h1>สร้างลิงก์ข้อความ + QR (เวอร์ชัน DAY)</h1>
+    <p class="caption">
+      ใส่ข้อความ, ความเร็ว, สี, คนรับ, ป้าย "ช่องแสดงสัญลักษณ์"
+      และถ้าอยากให้ระบบนับจำนวนวัน ให้ใส่ "วันที่เริ่มนับ" เพิ่มด้วย
+    </p>
+
+    <label for="msg">1. ข้อความที่จะให้พิมพ์</label>
+    <textarea id="msg" placeholder="เช่น ขอบคุณที่อยู่ข้าง ๆ กันนะ :)"></textarea>
+
+    <div class="row">
+      <div>
+        <label for="speed">2. ความเร็วในการพิมพ์ (มิลลิวินาที / ตัวอักษร)</label>
+        <input id="speed" type="number" min="10" max="500" value="60" />
+      </div>
+      <div>
+        <label for="color">3. สีของตัวข้อความ</label>
+        <input id="color" type="color" value="#00ff7f" />
+      </div>
+    </div>
+
+    <label for="to">4. ส่งถึงใคร</label>
+    <input id="to" type="text" placeholder="เช่น ส่งถึง: เดย์" />
+
+    <label for="symbolKind">5. ช่องแสดงสัญลักษณ์</label>
+    <select id="symbolKind">
+      <option value="xmas">ต้นคริสต์มาส</option>
+      <option value="newyear">สวัสดีปีใหม่ (TH/EN)</option>
+      <option value="songkran">สุขสันต์สงกรานต์</option>
+      <option value="birthday">สุขสันต์วันเกิด</option>
+    </select>
+
+    <label for="startDate">6. วันที่เริ่มนับจำนวนวัน (เช่น วันเกิด) – ไม่บังคับ</label>
+    <input id="startDate" type="date" />
+
+    <button class="primary" id="generateBtn">สรุป & สร้างลิงก์ + QR</button>
+
+    <div class="result" id="result">
+      <div class="summary" id="summary"></div>
+
+      <div class="link-box">
+        <strong>ลิงก์ที่สร้างได้:</strong><br />
+        <a id="shortLink" href="#" target="_blank"></a>
+      </div>
+
+      <div class="qr-wrapper">
+        <div id="qrcode"></div>
+        <div class="note">
+          สแกน QR จะไปหน้าแสดงข้อความ (พร้อม "ช่องแสดงสัญลักษณ์"
+          และข้อมูลวันที่/จำนวนวันตามที่กำหนด) บนเว็บไซต์ของเดย์
+        </div>
+      </div>
+    </div>
+
+    <div class="gen-footer">
+      <a id="genHomeLink" href="#">กลับไปเว็บไซต์หลักของเดย์</a>
+    </div>
+  </div>
+
+  <!-- โหมดแสดงข้อความ -->
+  <div class="card" id="viewerCard">
+    <h1>ข้อความพิเศษจากเดย์</h1>
+    <p class="caption">
+      ข้อความนี้ถูกสร้างผ่านหน้าเครื่องมือข้อความของเดย์
+      แสดงแบบพิมพ์ทีละตัว พร้อม "ช่องแสดงสัญลักษณ์" ด้านซ้าย
+    </p>
+
+    <div class="viewer-layout">
+      <div class="symbol-box">
+        <div class="symbol-title" id="symbolTitle">ช่องแสดงสัญลักษณ์</div>
+        <div id="symbolArea"></div>
+      </div>
+      <div class="message-box">
+        <div class="to" id="toLine"></div>
+        <div class="msg" id="msgBox"></div>
+        <div class="meta" id="meta"></div>
+        <div class="footer">
+          <span id="status">กำลังพิมพ์ข้อความ...</span>
+          <a id="homeLink" href="#">กลับไปเว็บไซต์หลักของเดย์</a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- QRCode.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- LZString สำหรับบีบ/คลายข้อความ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
+
+  <script>
+    // ======= CONFIG =======
+    const HOME_URL = "https://buisme.github.io/day-project-hub/";
+    const MESSAGE_PAGE_URL = window.location.href.split('?')[0];
+
+    // ======= ตรวจโหมด =======
+    const params = new URLSearchParams(window.location.search);
+    const hasData = params.has("d") || params.has("m"); // รองรับลิงก์แบบเก่า
+
+    const generatorCard = document.getElementById("generatorCard");
+    const viewerCard    = document.getElementById("viewerCard");
+
+    document.getElementById("genHomeLink").href = HOME_URL;
+
+    if (hasData) {
+      viewerCard.style.display = "block";
+      setupViewerMode();
+    } else {
+      generatorCard.style.display = "block";
+      setupGeneratorMode();
+    }
+
+    // ======= โหมดสร้างลิงก์ =======
+    function setupGeneratorMode() {
+      const msgEl       = document.getElementById("msg");
+      const speedEl     = document.getElementById("speed");
+      const colorEl     = document.getElementById("color");
+      const toEl        = document.getElementById("to");
+      const kindEl      = document.getElementById("symbolKind");
+      const startDateEl = document.getElementById("startDate");
+
+      const resultBox = document.getElementById("result");
+      const summaryEl = document.getElementById("summary");
+      const linkEl    = document.getElementById("shortLink");
+      const qrBox     = document.getElementById("qrcode");
+
+      document.getElementById("generateBtn").addEventListener("click", () => {
+        const msg   = msgEl.value.trim();
+        const speed = parseInt(speedEl.value, 10) || 60;
+        const color = colorEl.value || "#00ff7f";
+        const to    = toEl.value.trim() || "ใครบางคน";
+        const kind  = kindEl.value || "xmas";
+        const startDate = startDateEl.value || ""; // yyyy-mm-dd
+
+        if (!msg) {
+          alert("กรุณาพิมพ์ข้อความก่อนนะ");
+          msgEl.focus();
+          return;
+        }
+
+        const nowIso = new Date().toISOString();
+
+        // รวมข้อมูลเป็น JSON แล้วบีบอัดให้สั้น
+        const payload = {
+          m: msg,
+          s: speed,
+          c: color.replace("#",""),
+          t: to,
+          k: kind,
+          d0: startDate,
+          created: nowIso
+        };
+        const json = JSON.stringify(payload);
+        const encoded = LZString.compressToEncodedURIComponent(json);
+
+        const shortUrl = MESSAGE_PAGE_URL + "?d=" + encoded;
+
+        const kindTextMap = {
+          xmas: "ต้นคริสต์มาส",
+          newyear: "สวัสดีปีใหม่ (TH/EN)",
+          songkran: "สุขสันต์สงกรานต์",
+          birthday: "สุขสันต์วันเกิด"
+        };
+
+        let summary =
+          "สรุปค่าที่รับมา:\n" +
+          `• ข้อความ: ${msg}\n` +
+          `• ความเร็วพิมพ์: ${speed} ms/ตัวอักษร\n` +
+          `• สีตัวอักษร: ${color}\n` +
+          `• ส่งถึง: ${to}\n` +
+          `• ช่องแสดงสัญลักษณ์: ${kindTextMap[kind] || kind}\n` +
+          `• วันที่สร้างลิงก์: ${new Date(nowIso).toLocaleString("th-TH")}`;
+
+        if (startDate) {
+          summary += `\n• วันที่เริ่มนับจำนวนวัน: ${startDate} (จะคำนวณตอนเปิดลิงก์)`;
+        }
+
+        summaryEl.textContent = summary;
+
+        linkEl.textContent = shortUrl;
+        linkEl.href = shortUrl;
+
+        qrBox.innerHTML = "";
+        new QRCode(qrBox, {
+          text: shortUrl,
+          width: 260,
+          height: 260,
+          correctLevel: QRCode.CorrectLevel.L
+        });
+
+        resultBox.style.display = "block";
+      });
+    }
+
+    // ======= โหมดแสดงข้อความ =======
+    function setupViewerMode() {
+      let m, s, cHex, t, k, startDateStr, createdIso;
+
+      if (params.has("d")) {
+        // แบบใหม่: decode + decompress
+        const encoded = params.get("d") || "";
+        const json = LZString.decompressFromEncodedURIComponent(encoded) || "{}";
+        let data;
+        try {
+          data = JSON.parse(json);
+        } catch {
+          data = {};
+        }
+        m    = data.m || "ยังไม่ได้ส่งข้อความมานะ :)";
+        s    = parseInt(data.s || 60, 10);
+        cHex = data.c || "00ff7f";
+        t    = data.t || "ใครบางคน";
+        k    = data.k || "xmas";
+        startDateStr = data.d0 || "";
+        createdIso   = data.created || "";
+      } else {
+        // fallback ของเดิม (เผื่อมีลิงก์เก่า)
+        m = params.get("m") || "ยังไม่ได้ส่งข้อความมานะ :)";
+        s = parseInt(params.get("s") || "60", 10);
+        cHex = params.get("c") || "00ff7f";
+        t = params.get("t") || "ใครบางคน";
+        k = params.get("k") || "xmas";
+        startDateStr = "";
+        createdIso = "";
+      }
+
+      const msgBox = document.getElementById("msgBox");
+      const toLine = document.getElementById("toLine");
+      const meta   = document.getElementById("meta");
+      const status = document.getElementById("status");
+      const homeLink = document.getElementById("homeLink");
+      const symbolTitle = document.getElementById("symbolTitle");
+
+      const color = "#" + cHex;
+
+      const titleMap = {
+        xmas: "ช่องแสดงสัญลักษณ์ • ต้นคริสต์มาส",
+        newyear: "ช่องแสดงสัญลักษณ์ • สวัสดีปีใหม่",
+        songkran: "ช่องแสดงสัญลักษณ์ • สุขสันต์สงกรานต์",
+        birthday: "ช่องแสดงสัญลักษณ์ • สุขสันต์วันเกิด"
+      };
+      symbolTitle.textContent = titleMap[k] || "ช่องแสดงสัญลักษณ์";
+
+      toLine.textContent = "ส่งถึง: " + t;
+      toLine.style.color = color;
+      msgBox.style.color = color;
+
+      let baseMeta =
+        "ความเร็วในการพิมพ์: " + (isNaN(s) ? 60 : s) +
+        " ms/ตัวอักษร • สีข้อความ: " + color;
+
+      let extraMeta = "";
+
+      if (createdIso) {
+        const created = new Date(createdIso);
+        extraMeta += "สร้างเมื่อ: " + created.toLocaleString("th-TH");
+      }
+
+      if (startDateStr) {
+        const start = new Date(startDateStr);
+        const today = new Date();
+        const dayMs = 24 * 60 * 60 * 1000;
+        const diffDays = Math.floor((today - start) / dayMs);
+        const startLabel = start.toLocaleDateString("th-TH");
+        if (extraMeta) extraMeta += " • ";
+        extraMeta += "นับจาก " + startLabel + " จนถึงวันนี้: " + diffDays + " วัน";
+      }
+
+      meta.textContent = extraMeta ? baseMeta + "\n" + extraMeta : baseMeta;
+
+      homeLink.href = HOME_URL;
+
+      typeWriter(m, isNaN(s) ? 60 : s, msgBox, status);
+      startSymbolDisplay(k, color);
+    }
+
+    async function typeWriter(text, speed, msgBox, statusEl) {
+      msgBox.textContent = "";
+      for (let ch of text) {
+        msgBox.textContent += ch;
+        await new Promise(res => setTimeout(res, speed));
+      }
+      statusEl.textContent = "พิมพ์ข้อความเสร็จแล้ว";
+    }
+
+    // ======= SYMBOLS =======
+    const treeLines = [
+      "        *",
+      "       ***",
+      "      *****",
+      "     *******",
+      "    *********",
+      "   ***********",
+      "  *************",
+      "       |||",
+      "       |||"
+    ];
+
+    const treeColors = [
+      "#f97316",
+      "#fb7185",
+      "#22c55e",
+      "#38bdf8",
+      "#eab308"
+    ];
+
+    function startSymbolDisplay(kind, mainColor) {
+      const area = document.getElementById("symbolArea");
+      if (!area) return;
+
+      const color = mainColor || "#22c55e";
+
+      if (kind === "xmas") {
+        function renderTree() {
+          let html = "";
+          for (let i = 0; i < treeLines.length; i++) {
+            const line = treeLines[i];
+            for (let ch of line) {
+              if (ch === "*") {
+                const c = treeColors[Math.floor(Math.random() * treeColors.length)];
+                html += `<span style="color:${c}">*</span>`;
+              } else if (ch === "|") {
+                html += `<span style="color:#9ca3af">|</span>`;
+              } else if (ch === " ") {
+                html += "&nbsp;";
+              } else {
+                html += `<span style="color:${color}">${ch}</span>`;
+              }
+            }
+            html += "<br>";
+          }
+          area.innerHTML = html;
+        }
+        renderTree();
+        setInterval(renderTree, 180);
+      } else if (kind === "newyear") {
+        let tick = 0;
+        function renderNY() {
+          const c1 = tick % 2 === 0 ? color : "#38bdf8";
+          const c2 = tick % 2 === 0 ? "#eab308" : "#f97316";
+          area.innerHTML =
+            `<div style="font-size:0.85rem;color:${c1};">สวัสดีปีใหม่</div>` +
+            `<div style="font-size:0.75rem;color:${c2};margin-top:4px;">HAPPY NEW YEAR</div>`;
+          tick++;
+        }
+        renderNY();
+        setInterval(renderNY, 500);
+      } else if (kind === "songkran") {
+        let tick = 0;
+        function renderSongkran() {
+          const c1 = tick % 2 === 0 ? color : "#38bdf8";
+          area.innerHTML =
+            `<div style="font-size:0.85rem;color:${c1};">สุขสันต์วันสงกรานต์</div>` +
+            `<div style="font-size:0.75rem;color:#60a5fa;margin-top:4px;">Happy Songkran</div>` +
+            `<div style="font-size:1.2rem;margin-top:4px;">💧 💦 💧</div>`;
+          tick++;
+        }
+        renderSongkran();
+        setInterval(renderSongkran, 600);
+      } else if (kind === "birthday") {
+        let tick = 0;
+        function renderBD() {
+          const c1 = tick % 2 === 0 ? color : "#fb7185";
+          area.innerHTML =
+            `<div style="font-size:0.85rem;color:${c1};">สุขสันต์วันเกิด</div>` +
+            `<div style="font-size:0.75rem;color:#fbbf24;margin-top:4px;">Happy Birthday</div>` +
+            `<div style="font-size:1.2rem;margin-top:4px;">🎂<span style="color:#f97316;">★</span>🎂</div>`;
+          tick++;
+        }
+        renderBD();
+        setInterval(renderBD, 600);
+      } else {
+        area.textContent = "ช่องแสดงสัญลักษณ์";
+      }
+    }
+  </script>
+</body>
+</html>
