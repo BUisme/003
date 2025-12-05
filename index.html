@@ -260,6 +260,8 @@
 
   <!-- QRCode.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- LZString สำหรับบีบ/คลายข้อความ -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js"></script>
 
   <script>
     // ======= CONFIG =======
@@ -268,14 +270,14 @@
 
     // ======= ตรวจโหมด =======
     const params = new URLSearchParams(window.location.search);
-    const hasMessage = params.has("m");
+    const hasData = params.has("d") || params.has("m"); // รองรับของเก่าด้วย
 
     const generatorCard = document.getElementById("generatorCard");
     const viewerCard    = document.getElementById("viewerCard");
 
     document.getElementById("genHomeLink").href = HOME_URL;
 
-    if (hasMessage) {
+    if (hasData) {
       viewerCard.style.display = "block";
       setupViewerMode();
     } else {
@@ -309,15 +311,18 @@
           return;
         }
 
-        const p = new URLSearchParams({
+        // รวมข้อมูลเป็น JSON แล้วบีบอัดให้สั้น
+        const payload = {
           m: msg,
-          s: String(speed),
+          s: speed,
           c: color.replace("#",""),
           t: to,
           k: kind
-        });
+        };
+        const json = JSON.stringify(payload);
+        const encoded = LZString.compressToEncodedURIComponent(json);
 
-        const shortUrl = MESSAGE_PAGE_URL + "?" + p.toString();
+        const shortUrl = MESSAGE_PAGE_URL + "?d=" + encoded;
 
         const kindTextMap = {
           xmas: "ต้นคริสต์มาส",
@@ -340,8 +345,9 @@
         qrBox.innerHTML = "";
         new QRCode(qrBox, {
           text: shortUrl,
-          width: 200,
-          height: 200
+          width: 260,
+          height: 260,
+          correctLevel: QRCode.CorrectLevel.L
         });
 
         resultBox.style.display = "block";
@@ -350,11 +356,31 @@
 
     // ======= โหมดแสดงข้อความ =======
     function setupViewerMode() {
-      const m = params.get("m") || "ยังไม่ได้ส่งข้อความมานะ :)";
-      const s = parseInt(params.get("s") || "60", 10);
-      const cHex = params.get("c") || "00ff7f";
-      const t = params.get("t") || "ใครบางคน";
-      const k = params.get("k") || "xmas";
+      let m, s, cHex, t, k;
+
+      if (params.has("d")) {
+        // แบบใหม่: decode + decompress
+        const encoded = params.get("d") || "";
+        const json = LZString.decompressFromEncodedURIComponent(encoded) || "{}";
+        let data;
+        try {
+          data = JSON.parse(json);
+        } catch {
+          data = {};
+        }
+        m    = data.m || "ยังไม่ได้ส่งข้อความมานะ :)";
+        s    = parseInt(data.s || 60, 10);
+        cHex = data.c || "00ff7f";
+        t    = data.t || "ใครบางคน";
+        k    = data.k || "xmas";
+      } else {
+        // fallback ของเดิม (เผื่อมีลิงก์เก่า)
+        m = params.get("m") || "ยังไม่ได้ส่งข้อความมานะ :)";
+        s = parseInt(params.get("s") || "60", 10);
+        cHex = params.get("c") || "00ff7f";
+        t = params.get("t") || "ใครบางคน";
+        k = params.get("k") || "xmas";
+      }
 
       const msgBox = document.getElementById("msgBox");
       const toLine = document.getElementById("toLine");
@@ -424,7 +450,6 @@
       const color = mainColor || "#22c55e";
 
       if (kind === "xmas") {
-        // ต้นคริสต์มาสกระพริบ
         function renderTree() {
           let html = "";
           for (let i = 0; i < treeLines.length; i++) {
@@ -448,7 +473,6 @@
         renderTree();
         setInterval(renderTree, 180);
       } else if (kind === "newyear") {
-        // สวัสดีปีใหม่ TH/EN แบบกระพริบสีเบา ๆ
         let tick = 0;
         function renderNY() {
           const c1 = tick % 2 === 0 ? color : "#38bdf8";
@@ -461,7 +485,6 @@
         renderNY();
         setInterval(renderNY, 500);
       } else if (kind === "songkran") {
-        // สุขสันต์สงกรานต์ + water effect
         let tick = 0;
         function renderSongkran() {
           const c1 = tick % 2 === 0 ? color : "#38bdf8";
@@ -474,22 +497,18 @@
         renderSongkran();
         setInterval(renderSongkran, 600);
       } else if (kind === "birthday") {
-        // สุขสันต์วันเกิด + เค้กเล็ก ๆ
         let tick = 0;
         function renderBD() {
           const c1 = tick % 2 === 0 ? color : "#fb7185";
           area.innerHTML =
             `<div style="font-size:0.85rem;color:${c1};">สุขสันต์วันเกิด</div>` +
             `<div style="font-size:0.75rem;color:#fbbf24;margin-top:4px;">Happy Birthday</div>` +
-            `<div style="font-size:1.2rem;margin-top:4px;">` +
-            `🎂<span style="color:#f97316;">★</span>🎂` +
-            `</div>`;
+            `<div style="font-size:1.2rem;margin-top:4px;">🎂<span style="color:#f97316;">★</span>🎂</div>`;
           tick++;
         }
         renderBD();
         setInterval(renderBD, 600);
       } else {
-        // default
         area.textContent = "ช่องแสดงสัญลักษณ์";
       }
     }
