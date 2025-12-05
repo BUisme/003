@@ -46,7 +46,7 @@
       outline: none;
     }
     textarea { min-height: 90px; resize: vertical; }
-    input[type="color"] { padding: 0; height: 40px; }
+    input[type="color"] { padding: 0; height: 40px; cursor: pointer; }
     .row { display: flex; gap: 12px; flex-wrap: wrap; }
     .row > div { flex: 1 1 150px; }
     button.primary {
@@ -60,6 +60,7 @@
       font-weight: 600;
       font-size: 1rem;
       cursor: pointer;
+      transition: background 0.2s;
     }
     button.primary:hover { background: #4ade80; }
     .result {
@@ -109,7 +110,9 @@
       padding: 5px 11px;
       border-radius: 999px;
       border: 1px solid #38bdf8;
+      transition: background 0.2s;
     }
+    .gen-footer a:hover { background: rgba(56,189,248,0.1); }
 
     /* viewer mode */
     .viewer-layout {
@@ -164,7 +167,9 @@
       padding: 5px 11px;
       border-radius: 999px;
       border: 1px solid #38bdf8;
+      transition: background 0.2s;
     }
+    .footer a:hover { background: rgba(56,189,248,0.1); }
 
     #generatorCard { display: none; }
     #viewerCard { display: none; }
@@ -175,7 +180,7 @@
   <div class="card" id="generatorCard">
     <h1>สร้างลิงก์ข้อความ + QR (เวอร์ชัน DAY)</h1>
     <p class="caption">
-      ใส่ข้อความ, ความเร็ว, สี, คนรับ และเลือกป้ายใน “ช่องแสดงสัญลักษณ์”
+      ใส่ข้อความ, ความเร็ว, สี, คนรับ และเลือกป้ายใน "ช่องแสดงสัญลักษณ์"
       ระบบจะสรุปให้พร้อมสร้างลิงก์สั้นและ QR สำหรับแชร์ต่อ
     </p>
 
@@ -198,10 +203,10 @@
 
     <label for="symbolKind">5. ช่องแสดงสัญลักษณ์</label>
     <select id="symbolKind">
-      <option value="xmas">1. ต้นคริสต์มาส</option>
-      <option value="newyear">1.2 สวัสดีปีใหม่ (TH/EN)</option>
-      <option value="songkran">1.3 สุขสันต์สงกรานต์</option>
-      <option value="birthday">1.4 สุขสันต์วันเกิด</option>
+      <option value="xmas">ต้นคริสต์มาส</option>
+      <option value="newyear">สวัสดีปีใหม่ (TH/EN)</option>
+      <option value="songkran">สุขสันต์สงกรานต์</option>
+      <option value="birthday">สุขสันต์วันเกิด</option>
     </select>
 
     <button class="primary" id="generateBtn">สรุป & สร้างลิงก์ + QR</button>
@@ -217,14 +222,14 @@
       <div class="qr-wrapper">
         <div id="qrcode"></div>
         <div class="note">
-          สแกน QR จะไปหน้าแสดงข้อความ (พร้อม “ช่องแสดงสัญลักษณ์”
+          สแกน QR จะไปหน้าแสดงข้อความ (พร้อม "ช่องแสดงสัญลักษณ์"
           ตามที่เลือก) บนเว็บไซต์ของเดย์
         </div>
       </div>
     </div>
 
     <div class="gen-footer">
-      <a id="genHomeLink" href="#" target="_blank">กลับไปเว็บไซต์หลักของเดย์</a>
+      <a id="genHomeLink" href="#">กลับไปเว็บไซต์หลักของเดย์</a>
     </div>
   </div>
 
@@ -233,7 +238,7 @@
     <h1>ข้อความพิเศษจากเดย์</h1>
     <p class="caption">
       ข้อความนี้ถูกสร้างผ่านหน้าเครื่องมือข้อความของเดย์
-      แสดงแบบพิมพ์ทีละตัว พร้อม “ช่องแสดงสัญลักษณ์” ด้านซ้าย
+      แสดงแบบพิมพ์ทีละตัว พร้อม "ช่องแสดงสัญลักษณ์" ด้านซ้าย
     </p>
 
     <div class="viewer-layout">
@@ -247,19 +252,19 @@
         <div class="meta" id="meta"></div>
         <div class="footer">
           <span id="status">กำลังพิมพ์ข้อความ...</span>
-          <a id="homeLink" href="#" target="_blank">กลับไปเว็บไซต์หลักของเดย์</a>
+          <a id="homeLink" href="#">กลับไปเว็บไซต์หลักของเดย์</a>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- QRCode.js สำหรับโหมดสร้างลิงก์ -->
+  <!-- QRCode.js -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <script>
     // ======= CONFIG =======
     const HOME_URL = "https://buisme.github.io/day-project-hub/";
-    const MESSAGE_PAGE_URL = window.location.origin + window.location.pathname;
+    const MESSAGE_PAGE_URL = window.location.href.split('?')[0];
 
     // ======= ตรวจโหมด =======
     const params = new URLSearchParams(window.location.search);
@@ -443,7 +448,7 @@
         renderTree();
         setInterval(renderTree, 180);
       } else if (kind === "newyear") {
-        // สวัสดีปีใหม่ TH/EN
+        // สวัสดีปีใหม่ TH/EN แบบกระพริบสีเบา ๆ
         let tick = 0;
         function renderNY() {
           const c1 = tick % 2 === 0 ? color : "#38bdf8";
@@ -456,32 +461,35 @@
         renderNY();
         setInterval(renderNY, 500);
       } else if (kind === "songkran") {
-        // สุขสันต์สงกรานต์
+        // สุขสันต์สงกรานต์ + water effect
         let tick = 0;
         function renderSongkran() {
           const c1 = tick % 2 === 0 ? color : "#38bdf8";
           area.innerHTML =
             `<div style="font-size:0.85rem;color:${c1};">สุขสันต์วันสงกรานต์</div>` +
             `<div style="font-size:0.75rem;color:#60a5fa;margin-top:4px;">Happy Songkran</div>` +
-            `<div style="font-size:0.7rem;color:#93c5fd;margin-top:4px;">💧 💦 💧</div>`;
+            `<div style="font-size:1.2rem;margin-top:4px;">💧 💦 💧</div>`;
           tick++;
         }
         renderSongkran();
         setInterval(renderSongkran, 600);
       } else if (kind === "birthday") {
-        // สุขสันต์วันเกิด
+        // สุขสันต์วันเกิด + เค้กเล็ก ๆ
         let tick = 0;
         function renderBD() {
           const c1 = tick % 2 === 0 ? color : "#fb7185";
           area.innerHTML =
             `<div style="font-size:0.85rem;color:${c1};">สุขสันต์วันเกิด</div>` +
             `<div style="font-size:0.75rem;color:#fbbf24;margin-top:4px;">Happy Birthday</div>` +
-            `<div style="font-size:0.7rem;margin-top:4px;">🎂<span style="color:#f97316;">★</span>🎂</div>`;
+            `<div style="font-size:1.2rem;margin-top:4px;">` +
+            `🎂<span style="color:#f97316;">★</span>🎂` +
+            `</div>`;
           tick++;
         }
         renderBD();
         setInterval(renderBD, 600);
       } else {
+        // default
         area.textContent = "ช่องแสดงสัญลักษณ์";
       }
     }
