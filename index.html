@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="th">
 <head>
@@ -133,10 +132,9 @@
       line-height: 1.1;
       text-align: center;
     }
+    /* ซ่อนหัวข้อ "ช่องแสดงสัญลักษณ์ • ..." */
     .symbol-title {
-      font-size: 0.8rem;
-      color: #9ca3af;
-      margin-bottom: 6px;
+      display: none;
     }
     #symbolArea { white-space: pre-wrap; }
     .message-box {
@@ -145,6 +143,7 @@
       border-radius: 14px;
       padding: 12px 12px 14px;
       border: 1px solid #1f2937;
+      transition: box-shadow 0.2s, border-color 0.2s, background 0.2s;
     }
     .to { font-size: 0.95rem; margin-bottom: 4px; }
     .msg {
@@ -187,8 +186,8 @@
   <div class="card" id="generatorCard">
     <h1>สร้างลิงก์ข้อความ + QR (เวอร์ชัน DAY)</h1>
     <p class="caption">
-      ใส่ข้อความ, ความเร็ว, สี, คนรับ, ป้าย "ช่องแสดงสัญลักษณ์"
-      และถ้าอยากให้ระบบนับจำนวนวัน ให้ใส่ "วันที่เริ่มนับ" เพิ่มด้วย
+      ใส่ข้อความ, ความเร็ว, สี, คนรับ, ป้าย "ช่องแสดงสัญลักษณ์",
+      "ข้อความพิเศษจาก" และเลือกธีมอารมณ์ของข้อความได้ตามใจ
     </p>
 
     <label for="msg">1. ข้อความที่จะให้พิมพ์</label>
@@ -216,7 +215,19 @@
       <option value="birthday">สุขสันต์วันเกิด</option>
     </select>
 
-    <label for="startDate">6. วันที่เริ่มนับจำนวนวัน (เช่น วันเกิด) – ไม่บังคับ</label>
+    <label for="fromLabel">6. ข้อความพิเศษจาก</label>
+    <input id="fromLabel" type="text" placeholder='เช่น เดย์, From Day, ฯลฯ' />
+
+    <label for="theme">7. ธีมข้อความ</label>
+    <select id="theme">
+      <option value="default">ปกติ</option>
+      <option value="love">รัก</option>
+      <option value="sad">เศร้า</option>
+      <option value="fun">สนุก</option>
+      <option value="thanks">ขอบคุณ</option>
+    </select>
+
+    <label for="startDate">8. วันที่เริ่มนับจำนวนวัน (เช่น วันเกิด) – ไม่บังคับ</label>
     <input id="startDate" type="date" />
 
     <button class="primary" id="generateBtn">สรุป & สร้างลิงก์ + QR</button>
@@ -233,7 +244,7 @@
         <div id="qrcode"></div>
         <div class="note">
           สแกน QR จะไปหน้าแสดงข้อความ (พร้อม "ช่องแสดงสัญลักษณ์"
-          และข้อมูลวันที่/จำนวนวันตามที่กำหนด) บนเว็บไซต์ของเดย์
+          และข้อมูลวันที่/จำนวนวัน + ธีมที่เลือก) บนเว็บไซต์ของเดย์
         </div>
       </div>
     </div>
@@ -245,18 +256,15 @@
 
   <!-- โหมดแสดงข้อความ -->
   <div class="card" id="viewerCard">
-    <h1>ข้อความพิเศษจากเดย์</h1>
-    <p class="caption">
-      ข้อความนี้ถูกสร้างผ่านหน้าเครื่องมือข้อความของเดย์
-      แสดงแบบพิมพ์ทีละตัว พร้อม "ช่องแสดงสัญลักษณ์" ด้านซ้าย
-    </p>
+    <h1 id="viewerTitle">ข้อความพิเศษจากเดย์</h1>
+    <p class="caption" id="viewerCaption"></p>
 
     <div class="viewer-layout">
       <div class="symbol-box">
         <div class="symbol-title" id="symbolTitle">ช่องแสดงสัญลักษณ์</div>
         <div id="symbolArea"></div>
       </div>
-      <div class="message-box">
+      <div class="message-box" id="messageBox">
         <div class="to" id="toLine"></div>
         <div class="msg" id="msgBox"></div>
         <div class="meta" id="meta"></div>
@@ -302,6 +310,8 @@
       const colorEl     = document.getElementById("color");
       const toEl        = document.getElementById("to");
       const kindEl      = document.getElementById("symbolKind");
+      const fromEl      = document.getElementById("fromLabel");
+      const themeEl     = document.getElementById("theme");
       const startDateEl = document.getElementById("startDate");
 
       const resultBox = document.getElementById("result");
@@ -315,6 +325,8 @@
         const color = colorEl.value || "#00ff7f";
         const to    = toEl.value.trim() || "ใครบางคน";
         const kind  = kindEl.value || "xmas";
+        const from  = fromEl.value.trim() || "เดย์";
+        const theme = themeEl.value || "default";
         const startDate = startDateEl.value || ""; // yyyy-mm-dd
 
         if (!msg) {
@@ -332,6 +344,8 @@
           c: color.replace("#",""),
           t: to,
           k: kind,
+          from: from,
+          theme: theme,
           d0: startDate,
           created: nowIso
         };
@@ -347,9 +361,19 @@
           birthday: "สุขสันต์วันเกิด"
         };
 
+        const themeTextMap = {
+          default: "ปกติ",
+          love: "รัก",
+          sad: "เศร้า",
+          fun: "สนุก",
+          thanks: "ขอบคุณ"
+        };
+
         let summary =
           "สรุปค่าที่รับมา:\n" +
           `• ข้อความ: ${msg}\n` +
+          `• ข้อความพิเศษจาก: ${from}\n` +
+          `• ธีมข้อความ: ${themeTextMap[theme] || theme}\n` +
           `• ความเร็วพิมพ์: ${speed} ms/ตัวอักษร\n` +
           `• สีตัวอักษร: ${color}\n` +
           `• ส่งถึง: ${to}\n` +
@@ -379,7 +403,7 @@
 
     // ======= โหมดแสดงข้อความ =======
     function setupViewerMode() {
-      let m, s, cHex, t, k, startDateStr, createdIso;
+      let m, s, cHex, t, k, startDateStr, createdIso, from, theme;
 
       if (params.has("d")) {
         // แบบใหม่: decode + decompress
@@ -396,6 +420,8 @@
         cHex = data.c || "00ff7f";
         t    = data.t || "ใครบางคน";
         k    = data.k || "xmas";
+        from = data.from || "เดย์";
+        theme = data.theme || "default";
         startDateStr = data.d0 || "";
         createdIso   = data.created || "";
       } else {
@@ -405,6 +431,8 @@
         cHex = params.get("c") || "00ff7f";
         t = params.get("t") || "ใครบางคน";
         k = params.get("k") || "xmas";
+        from = "เดย์";
+        theme = "default";
         startDateStr = "";
         createdIso = "";
       }
@@ -415,30 +443,62 @@
       const status = document.getElementById("status");
       const homeLink = document.getElementById("homeLink");
       const symbolTitle = document.getElementById("symbolTitle");
+      const viewerTitle = document.getElementById("viewerTitle");
+      const messageBoxEl = document.getElementById("messageBox");
 
       const color = "#" + cHex;
 
-      const titleMap = {
-        xmas: "ช่องแสดงสัญลักษณ์ • ต้นคริสต์มาส",
-        newyear: "ช่องแสดงสัญลักษณ์ • สวัสดีปีใหม่",
-        songkran: "ช่องแสดงสัญลักษณ์ • สุขสันต์สงกรานต์",
-        birthday: "ช่องแสดงสัญลักษณ์ • สุขสันต์วันเกิด"
+      const themeNameMap = {
+        default: "",
+        love: "ความรัก",
+        sad: "เศร้า",
+        fun: "สนุก",
+        thanks: "ขอบคุณ"
       };
-      symbolTitle.textContent = titleMap[k] || "ช่องแสดงสัญลักษณ์";
+
+      // ตั้งหัวข้อบนให้ตรงกับอินพุต "ข้อความพิเศษจาก" + ธีม
+      let title = 'ข้อความพิเศษจาก : "' + from + '"';
+      if (themeNameMap[theme]) {
+        title += " • ธีม: " + themeNameMap[theme];
+      }
+      viewerTitle.textContent = title;
+
+      // ปรับสไตล์กล่องข้อความตามธีม
+      messageBoxEl.style.boxShadow = "none";
+      messageBoxEl.style.borderColor = "#1f2937";
+      messageBoxEl.style.background = "#020617";
+
+      if (theme === "love") {
+        messageBoxEl.style.borderColor = "#fb7185";
+        messageBoxEl.style.boxShadow = "0 0 24px rgba(248,113,113,0.35)";
+        messageBoxEl.style.background = "radial-gradient(circle at top, rgba(248,113,113,0.18), #020617 60%)";
+      } else if (theme === "sad") {
+        messageBoxEl.style.borderColor = "#38bdf8";
+        messageBoxEl.style.boxShadow = "0 0 24px rgba(56,189,248,0.30)";
+        messageBoxEl.style.background = "radial-gradient(circle at top, rgba(37,99,235,0.18), #020617 60%)";
+      } else if (theme === "fun") {
+        messageBoxEl.style.borderColor = "#eab308";
+        messageBoxEl.style.boxShadow = "0 0 24px rgba(234,179,8,0.30)";
+        messageBoxEl.style.background = "radial-gradient(circle at top, rgba(234,179,8,0.20), #020617 60%)";
+      } else if (theme === "thanks") {
+        messageBoxEl.style.borderColor = "#22c55e";
+        messageBoxEl.style.boxShadow = "0 0 24px rgba(34,197,94,0.30)";
+        messageBoxEl.style.background = "radial-gradient(circle at top, rgba(34,197,94,0.20), #020617 60%)";
+      }
+
+      // ไม่ต้องแสดงหัวข้อช่องแสดงสัญลักษณ์ (ปล่อยให้ CSS ซ่อน)
+      symbolTitle.textContent = "";
 
       toLine.textContent = "ส่งถึง: " + t;
       toLine.style.color = color;
       msgBox.style.color = color;
 
-      let baseMeta =
-        "ความเร็วในการพิมพ์: " + (isNaN(s) ? 60 : s) +
-        " ms/ตัวอักษร • สีข้อความ: " + color;
-
-      let extraMeta = "";
+      // meta: แสดงเฉพาะข้อมูลวันที่/จำนวนวัน + อายุ
+      const metaLines = [];
 
       if (createdIso) {
         const created = new Date(createdIso);
-        extraMeta += "สร้างเมื่อ: " + created.toLocaleString("th-TH");
+        metaLines.push("สร้างเมื่อ: " + created.toLocaleString("th-TH"));
       }
 
       if (startDateStr) {
@@ -447,11 +507,27 @@
         const dayMs = 24 * 60 * 60 * 1000;
         const diffDays = Math.floor((today - start) / dayMs);
         const startLabel = start.toLocaleDateString("th-TH");
-        if (extraMeta) extraMeta += " • ";
-        extraMeta += "นับจาก " + startLabel + " จนถึงวันนี้: " + diffDays + " วัน";
+
+        // คำนวณอายุเป็นปี
+        let ageYears = today.getFullYear() - start.getFullYear();
+        const hasHadBirthdayThisYear =
+          (today.getMonth() > start.getMonth()) ||
+          (today.getMonth() === start.getMonth() && today.getDate() >= start.getDate());
+        if (!hasHadBirthdayThisYear) ageYears -= 1;
+        if (ageYears < 0) ageYears = 0;
+
+        let line = "นับจาก " + startLabel + " จนถึงวันนี้: " + diffDays + " วัน";
+        line += " • อายุ: " + ageYears + " ปี";
+        metaLines.push(line);
       }
 
-      meta.textContent = extraMeta ? baseMeta + "\n" + extraMeta : baseMeta;
+      if (metaLines.length > 0) {
+        meta.textContent = metaLines.join("\n");
+        meta.style.display = "block";
+      } else {
+        meta.textContent = "";
+        meta.style.display = "none";
+      }
 
       homeLink.href = HOME_URL;
 
